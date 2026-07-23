@@ -3,7 +3,12 @@ package slogger
 import (
 	"log/slog"
 	"testing"
+
+	"github.com/spf13/pflag"
 )
+
+// check we implement the pflag.Value interface
+var _ pflag.Value = &LoggerTypeVar{}
 
 func TestLoggerTypeVar_String(t *testing.T) {
 	tests := []struct {
