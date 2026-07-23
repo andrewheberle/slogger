@@ -1,5 +1,7 @@
 # slogger
 
+[![codecov](https://codecov.io/gh/andrewheberle/slogger/graph/badge.svg?token=vGWAS7HoL0)](https://codecov.io/gh/andrewheberle/slogger)
+
 This is a helper package for `log/slog` to set up a `*slog.Logger` based on
 some defaults for text, JSON or output suitable for consumption by
 `sd_journal_stream_fd` (i.e., when your application is run as a systemd unit).
