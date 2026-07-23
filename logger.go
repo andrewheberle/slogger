@@ -13,10 +13,10 @@ import (
 // check that fmt.Stringer is implemented
 var _ fmt.Stringer = &LoggerTypeVar{}
 
-// The type of log handler to use
+// The type that defines which log handler to create via [NewLogger]
 type LoggerType string
 
-// String constants for each log handler type
+// String constants for each log handler type.
 const (
 	LoggerTypeAuto    LoggerType = "auto"
 	LoggerTypeDiscard LoggerType = "discard"
@@ -26,12 +26,13 @@ const (
 )
 
 // This type satisfies the [github.com/spf13/pflag.Value] interface so
-// [LoggerType] can be set via a command line flag
+// [LoggerType] can be set via a command line flag.
 type LoggerTypeVar struct {
 	val LoggerType
 }
 
-// Strig method for LoggerTypeVar
+// String method for [LoggerTypeVar] to satisfy the
+// [github.com/spf13/pflag.Value] and [fmt.Stringer] interfaces.
 func (lt *LoggerTypeVar) String() string {
 	switch lt.val {
 	case LoggerTypeAuto, "":
@@ -49,7 +50,7 @@ func (lt *LoggerTypeVar) String() string {
 	return "unknown"
 }
 
-// Set is to satisfy the [github.com/spf13/pflag.Value] interface
+// The Set method is to satisfy the [github.com/spf13/pflag.Value] interface.
 func (lt *LoggerTypeVar) Set(s string) error {
 	switch s {
 	case "auto", "":
@@ -69,19 +70,19 @@ func (lt *LoggerTypeVar) Set(s string) error {
 	return nil
 }
 
-// Type is to satisfy the [github.com/spf13/pflag.Value] interface
+// The Type method is to satisfy the [github.com/spf13/pflag.Value] interface.
 func (lt LoggerTypeVar) Type() string {
 	return "string"
 }
 
-// Returns a [LoggerOption] suitable for passing to [NewLogger]
+// Returns a [LoggerOption] suitable for passing to [NewLogger].
 func (lt LoggerTypeVar) LoggerTypeOption() LoggerOption {
 	return WithLoggerType(lt.val)
 }
 
 var (
 	// This error is returned when an invalid [LoggerType] is provided to
-	// [NewLogger] via [WithLoggerType]
+	// [NewLogger] via [WithLoggerType].
 	ErrUnhandledLoggerType = errors.New("unhandled logger type")
 )
 
