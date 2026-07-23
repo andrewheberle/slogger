@@ -10,12 +10,13 @@ import (
 	"strings"
 )
 
-type LoggerTypeVar struct {
-	val string
-}
+// check that fmt.Stringer is implemented
+var _ fmt.Stringer = &LoggerTypeVar{}
 
+// The type of log handler to use
 type LoggerType string
 
+// String constants for each log handler type
 const (
 	LoggerTypeAuto    LoggerType = "auto"
 	LoggerTypeDiscard LoggerType = "discard"
@@ -24,35 +25,43 @@ const (
 	LoggerTypeText    LoggerType = "text"
 )
 
+// This type satisfies the [github.com/spf13/pflag.Value] interface so
+// [LoggerType] can be set via a command line flag
+type LoggerTypeVar struct {
+	val LoggerType
+}
+
+// Strig method for LoggerTypeVar
 func (lt *LoggerTypeVar) String() string {
 	switch lt.val {
-	case string(LoggerTypeAuto), "":
+	case LoggerTypeAuto, "":
 		return "auto"
-	case string(LoggerTypeDiscard):
+	case LoggerTypeDiscard:
 		return "discard"
-	case string(LoggerTypeJson):
+	case LoggerTypeJson:
 		return "json"
-	case string(LoggerTypeSystemd):
+	case LoggerTypeSystemd:
 		return "systemd"
-	case string(LoggerTypeText):
+	case LoggerTypeText:
 		return "text"
 	}
 
 	return "unknown"
 }
 
+// Set is to satisfy the [github.com/spf13/pflag.Value] interface
 func (lt *LoggerTypeVar) Set(s string) error {
 	switch s {
 	case "auto", "":
-		lt.val = string(LoggerTypeAuto)
+		lt.val = LoggerTypeAuto
 	case "discard":
-		lt.val = string(LoggerTypeDiscard)
+		lt.val = LoggerTypeDiscard
 	case "json":
-		lt.val = string(LoggerTypeJson)
+		lt.val = LoggerTypeJson
 	case "systemd":
-		lt.val = string(LoggerTypeSystemd)
+		lt.val = LoggerTypeSystemd
 	case "text":
-		lt.val = string(LoggerTypeText)
+		lt.val = LoggerTypeText
 	default:
 		return ErrUnhandledLoggerType
 	}
@@ -60,11 +69,19 @@ func (lt *LoggerTypeVar) Set(s string) error {
 	return nil
 }
 
+// Type is to satisfy the [github.com/spf13/pflag.Value] interface
 func (lt LoggerTypeVar) Type() string {
 	return "string"
 }
 
+// Returns a [LoggerOption] suitable for passing to [NewLogger]
+func (lt LoggerTypeVar) LoggerTypeOption() LoggerOption {
+	return WithLoggerType(lt.val)
+}
+
 var (
+	// This error is returned when an invalid [LoggerType] is provided to
+	// [NewLogger] via [WithLoggerType]
 	ErrUnhandledLoggerType = errors.New("unhandled logger type")
 )
 
@@ -73,6 +90,9 @@ type logger struct {
 	w  io.Writer
 }
 
+// NewLogger creates a new [slog.Logger] with the provided [slog.Leveler].
+// By default the [slog.Logger] outputs to [os.Stderr] and will output using
+// either [slog.NewTextHandler] or a [SystemdHandler].
 func NewLogger(leveler slog.Leveler, opts ...LoggerOption) (*slog.Logger, error) {
 	l := &logger{
 		lt: LoggerTypeAuto,
@@ -110,14 +130,19 @@ func NewLogger(leveler slog.Leveler, opts ...LoggerOption) (*slog.Logger, error)
 	return nil, fmt.Errorf("%w: %s", ErrUnhandledLoggerType, l.lt)
 }
 
+// LoggerOption allows passing options to [NewLogger]
 type LoggerOption func(*logger)
 
+// WithLoggerType allows overriding the default [LoggerType] of
+// [LoggerTypeAuto]
 func WithLoggerType(lt LoggerType) LoggerOption {
 	return func(l *logger) {
 		l.lt = lt
 	}
 }
 
+// WithWriter accepts an [io.Writer] in order to override the default of
+// sending logs to [os.Stderr]
 func WithWriter(w io.Writer) LoggerOption {
 	return func(l *logger) {
 		l.w = w

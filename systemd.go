@@ -10,6 +10,13 @@ import (
 	"sync"
 )
 
+// ensure interface is implemented
+var _ slog.Handler = &SystemdHandler{}
+
+// A [slog.Handler] implementation to output text in a format suitable for
+// [sd_journal_stream_fd].
+//
+// [sd_journal_stream_fd]: https://www.freedesktop.org/software/systemd/man/latest/sd_journal_stream_fd.html
 type SystemdHandler struct {
 	mu     *sync.Mutex
 	w      io.Writer
@@ -18,6 +25,7 @@ type SystemdHandler struct {
 	groups []string    // accumulated via WithGroup, outermost first
 }
 
+// Creates a new [SystemdHandler] that can be used by [slog.New]
 func NewSystemdHandler(w io.Writer, opts *slog.HandlerOptions) *SystemdHandler {
 	if opts == nil {
 		opts = &slog.HandlerOptions{}
